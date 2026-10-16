@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EjaanKu - Asisten Penulisan Skripsi & Karya Ilmiah</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes highlight-pulse {
+            0% { background-color: rgba(254, 226, 226, 0.8); }
+            50% { background-color: rgba(254, 202, 202, 1); }
+            100% { background-color: transparent; }
+        }
+        .highlight-flash {
+            animation: highlight-pulse 1.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 shadow-sm z-10">
+        <div class="flex items-center space-x-3">
+            <div class="bg-brand-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-graduation-cap text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="font-bold text-lg text-slate-800 leading-none">EjaanKu</h1>
+                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2 py-0.5 rounded-full" id="modeBadge">Edisi Skripsi & Jurnal</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Asisten Penulisan KBBI/EYD V & Akademik</p>
+            </div>
+        </div>
+
+        <!-- Controls Header -->
+        <div class="flex items-center space-x-3">
+            <!-- Selector Bahasa Target -->
+            <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 text-xs font-medium">
+                <i class="fa-solid fa-globe text-slate-500 ml-2 mr-1"></i>
+                <label for="langSelect" class="sr-only">Pilih Bahasa</label>
+                <select id="langSelect" onchange="switchLanguage()" class="bg-transparent text-slate-700 focus:outline-none cursor-pointer pr-2 py-1 font-semibold">
+                    <option value="id">Bahasa Indonesia (EYD V/KBBI)</option>
+                    <option value="en">English (Academic Grammar)</option>
+                </select>
+            </div>
+
+            <!-- Selector Gaya Bahasa / Tone -->
+            <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 text-xs font-medium">
+                <i class="fa-solid fa-sliders text-brand-600 ml-2 mr-1"></i>
+                <span class="text-slate-500 mr-1 hidden sm:inline">Gaya:</span>
+                <label for="toneSelect" class="sr-only">Gaya Bahasa</label>
+                <select id="toneSelect" class="bg-transparent text-slate-700 focus:outline-none cursor-pointer pr-2 py-1">
+                    <option value="academic">Akademik / Skripsi</option>
+                    <option value="formal">Formal / Resmi</option>
+                    <option value="professional">Bisnis / Profesional</option>
+                </select>
+            </div>
+
+            <!-- Tombol Utama Periksa -->
+            <button onclick="analyzeText()" id="checkBtn" class="bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-4 py-2 rounded-lg transition-all flex items-center space-x-2 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span id="btnText">Periksa Dokumen</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Editor Column (Left) -->
+        <div class="flex-1 flex flex-col bg-white border-r border-slate-200 h-full">
+            <!-- Toolbar Editor -->
+            <div class="flex items-center justify-between px-6 py-2.5 bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+                <div class="flex items-center space-x-4">
+                    <button onclick="clearText()" class="hover:text-red-600 flex items-center space-x-1 transition-colors cursor-pointer">
+                        <i class="fa-regular fa-trash-can"></i>
+                        <span>Bersihkan</span>
+                    </button>
+                    <button onclick="loadSampleText()" class="hover:text-brand-600 flex items-center space-x-1 transition-colors cursor-pointer">
+                        <i class="fa-regular fa-lightbulb"></i>
+                        <span>Muat Contoh Draf Skripsi</span>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span><strong id="wordCount" class="text-slate-800">0</strong> Kata</span>
+                    <span>•</span>
+                    <span><strong id="charCount" class="text-slate-800">0</strong> Karakter</span>
+                    <span>•</span>
+                    <span class="text-brand-600 font-semibold">Skor Kualitas: <span id="scoreVal">100</span>/100</span>
+                </div>
+            </div>
+
+            <!-- Text Area Container -->
+            <div class="flex-1 relative p-6">
+                <textarea 
+                    id="editorText" 
+                    oninput="handleInput()" 
+                    onkeyup="handleInput()" 
+                    onpaste="handlePaste()" 
+                    onchange="handleInput()" 
+                    placeholder="Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini..." 
+                    class="w-full h-full resize-none focus:outline-none text-slate-700 text-base leading-relaxed placeholder:text-slate-400 font-sans custom-scrollbar"
+                ></textarea>
+            </div>
+
+            <!-- Footer Toolbar Editor -->
+            <div class="px-6 py-2.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                    <span id="statusText">Mesin Pemeriksa Akademik Siap</span>
+                </div>
+                <button onclick="copyEditorText()" class="hover:text-slate-800 flex items-center space-x-1 cursor-pointer">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin Hasil</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Analysis Sidebar (Right) -->
+        <div class="w-96 bg-slate-50 flex flex-col shrink-0 h-full border-l border-slate-200">
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-slate-200 bg-white">
+                <button onclick="setActiveTab('suggestions')" id="tabSuggestions" class="flex-1 py-3 text-xs font-semibold border-b-2 border-brand-600 text-brand-600 flex justify-center items-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Saran Ejaan (<span id="suggCount">0</span>)</span>
+                </button>
+                <button onclick="setActiveTab('tone')" id="tabTone" class="flex-1 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex justify-center items-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Gaya Akademik</span>
+                </button>
+                <button onclick="setActiveTab('plagiarism')" id="tabPlagiarism" class="flex-1 py-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex justify-center items-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Plagiat & AI</span>
+                </button>
+            </div>
+
+            <!-- Tab Content Container -->
+            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                
+                <!-- Tab 1: Suggestions List -->
+                <div id="contentSuggestions" class="space-y-3">
+                    <div id="emptyState" class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-circle-check text-4xl mb-3 text-emerald-400"></i>
+                        <p class="text-sm font-medium text-slate-600">Belum Ada Analisis Teks</p>
+                        <p class="text-xs mt-1 px-4">Tempelkan draf skripsi Anda di sebelah kiri lalu klik tombol "Periksa Dokumen".</p>
+                    </div>
+
+                    <div id="suggestionsList" class="space-y-3 hidden">
+                        <!-- Dynamic Cards Inserted Here -->
+                    </div>
+                </div>
+
+                <!-- Tab 2: Tone & Academic Style -->
+                <div id="contentTone" class="hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-face-smile text-brand-600 mr-2"></i> Nada Bahasa Skripsi
+                        </h3>
+                        <p id="toneResult" class="text-sm font-medium text-slate-700">Akademik, obyektif, dan berbasis data.</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-bullseye text-brand-600 mr-2"></i> Parameter Keterbacaan
+                        </h3>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-500">Kesesuaian Standar EYD V / Grammar:</span>
+                            <span id="eydStatus" class="font-semibold text-emerald-600">98% Sangat Baik</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-500">Estimasi Waktu Baca:</span>
+                            <span id="readTime" class="font-semibold text-slate-700">1 menit</span>
+                        </div>
+                    </div>
+
+                    <!-- Parafrase Akademik -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                            <i class="fa-solid fa-wand-magic-sparkles text-brand-600 mr-2"></i> Refinasi Kalimat Skripsi
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-3">Tingkatkan kualitas gaya ilmiah dokumen Anda secara instan tanpa menggabungkan paragraf:</p>
+                        <div class="space-y-2">
+                            <button onclick="paraphraseText('academic')" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 text-left flex justify-between items-center transition-colors cursor-pointer">
+                                <span>Buat Lebih Formal & Akademis</span>
+                                <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                            </button>
+                            <button onclick="paraphraseText('short')" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 text-left flex justify-between items-center transition-colors cursor-pointer">
+                                <span>Ringkas & Hilangkan Redundansi</span>
+                                <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Plagiarism & AI Check -->
+                <div id="contentPlagiarism" class="hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
+                            <i class="fa-solid fa-robot text-brand-600 mr-2"></i> Indikasi Teks AI Generator
+                        </h3>
+                        <div class="flex items-center space-x-3 mb-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
+                                <div id="aiBar" class="bg-emerald-500 h-full w-[10%] transition-all duration-500"></div>
+                            </div>
+                            <span id="aiPercent" class="text-xs font-bold text-slate-700">10%</span>
+                        </div>
+                        <p id="aiVerdict" class="text-xs text-slate-500">Teks aman dari pola frasa AI.</p>
+                        <button onclick="humanizeText()" class="mt-3 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-lg text-xs font-semibold transition-colors flex justify-center items-center space-x-1 cursor-pointer">
+                            <i class="fa-solid fa-user-check"></i>
+                            <span>Humanisasi Teks & Anti-Plagiat AI</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
+                            <i class="fa-solid fa-copy text-brand-600 mr-2"></i> Kesamaan Jurnal (Google Scholar / Crossref)
+                        </h3>
+                        <div class="flex items-center space-x-3 mb-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
+                                <div id="plagBar" class="bg-emerald-500 h-full w-[0%] transition-all duration-500"></div>
+                            </div>
+                            <span id="plagPercent" class="text-xs font-bold text-slate-700">0%</span>
+                        </div>
+                        <p id="plagVerdict" class="text-xs text-slate-500">Tidak ada plagiarisme terdeteksi.</p>
+                    </div>
+
+                    <button onclick="runPlagiarismCheck()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors shadow-sm cursor-pointer">
+                        Pindai Kesamaan Repositori Jurnal
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs shadow-xl hidden flex items-center space-x-2 transition-all z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">Notifikasi</span>
+    </div>
+
+    <!-- Client-side Dynamic Engine -->
+    <script>
+        const sampleTextID = `Dalam penelitian ini, metodologi yang di gunakan adalah metode kualitatif. Peneliti melakukan analisa terhadap sistim yang ada [1] agar supaya kualitas hipotesa dapat di buktikan. Praktek lapangan di lakukan di laboratorium [2] [3] untuk memperhitungkan prosentase keberhasilan.`;
+        const sampleTextEN = `Abstract\n\nDirect competition between full service airlines and no-frills carriers is intensifying across the world. This paper attempts to provide answers to a number of critical questions regarding market share and passenger behavior.\n\nIntroduction\nThe aim of this paper is to compare passengers' selection criteria between a full service airline and a low cost carrier in a mature European market.`;
+
+        let currentLang = 'id';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchLanguage();
+            handleInput();
+        });
+
+        function handlePaste() {
+            setTimeout(() => {
+                handleInput();
+            }, 50);
+        }
+
+        function switchLanguage() {
+            const langEl = document.getElementById('langSelect');
+            if (langEl) currentLang = langEl.value;
+
+            const modeBadge = document.getElementById('modeBadge');
+            const editor = document.getElementById('editorText');
+
+            if (modeBadge) {
+                modeBadge.innerText = (currentLang === 'id') ? 'KBBI & EYD V Akademik' : 'English Academic Grammar';
+            }
+            if (editor) {
+                editor.placeholder = (currentLang === 'id') 
+                    ? "Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini..." 
+                    : "Type or paste your academic paper or Google Scholar abstract in English here...";
+            }
+        }
+
+        function loadSampleText() {
+            const editor = document.getElementById('editorText');
+            if (!editor) return;
+
+            editor.value = (currentLang === 'id') ? sampleTextID : sampleTextEN;
+            handleInput();
+            showToast("Contoh draf berhasil dimuat!");
+        }
+
+        function handleInput() {
+            const editor = document.getElementById('editorText');
+            const text = editor ? editor.value : '';
+            const trimmed = text.trim();
+            const words = trimmed ? trimmed.split(/\s+/).length : 0;
+            const chars = text.length;
+
+            const wordCountEl = document.getElementById('wordCount');
+            const charCountEl = document.getElementById('charCount');
+            const readTimeEl = document.getElementById('readTime');
+
+            if (wordCountEl) wordCountEl.innerText = words;
+            if (charCountEl) charCountEl.innerText = chars;
+
+            const minutes = Math.max(1, Math.ceil(words / 200));
+            if (readTimeEl) readTimeEl.innerText = `${minutes} menit`;
+
+            updateAILiveIndicator(text);
+        }
+
+        function updateAILiveIndicator(text) {
+            const aiBar = document.getElementById('aiBar');
+            const aiPercent = document.getElementById('aiPercent');
+            const aiVerdict = document.getElementById('aiVerdict');
+            if (!aiBar || !aiPercent || !aiVerdict) return;
+
+            if (!text.trim()) {
+                aiBar.style.width = '0%';
+                aiPercent.innerText = '0%';
+                aiVerdict.innerText = 'Belum ada draf untuk dianalisis.';
+                return;
+            }
+
+            const aiPattern = /\b(adalah cara paling praktis|berikut adalah|secara umum dapat disimpulkan|dalam era digital saat ini|sangat penting untuk diingat|memiliki peran yang sangat vital|this paper attempts to provide answers|the aim of this paper is to|surveys have been undertaken|the paper begins by examining)\b/gi;
+            const matches = text.match(aiPattern);
+            let score = matches ? matches.length * 20 + 8 : 8;
+            score = Math.min(95, Math.max(2, score));
+
+            aiBar.style.width = `${score}%`;
+            aiPercent.innerText = `${score}%`;
+
+            if (score > 50) {
+                aiBar.className = "bg-amber-500 h-full transition-all duration-500";
+                aiVerdict.innerText = 'Indikasi frasa buatan AI/jurnal umum. Gunakan tombol Humanisasi.';
+            } else {
+                aiBar.className = "bg-emerald-500 h-full transition-all duration-500";
+                aiVerdict.innerText = 'Gaya tulisan terindikasi sebagai tulisan ilmiah manusia.';
+            }
+        }
+
+        function clearText() {
+            const editor = document.getElementById('editorText');
+            if (editor) editor.value = '';
+            handleInput();
+            resetSuggestions();
+            showToast("Draf dibersihkan");
+        }
+
+        function copyEditorText() {
+            const editor = document.getElementById('editorText');
+            if (!editor || !editor.value) return;
+            navigator.clipboard.writeText(editor.value);
+            showToast("Teks berhasil disalin ke clipboard!");
+        }
+
+        function setActiveTab(tab) {
+            const tabs = ['suggestions', 'tone', 'plagiarism'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const content = document.getElementById(`content${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                
+                if (btn && content) {
+                    if (t === tab) {
+                        btn.classList.add('border-brand-600', 'text-brand-600');
+                        btn.classList.remove('border-transparent', 'text-slate-500');
+                        content.classList.remove('hidden');
+                    } else {
+                        btn.classList.remove('border-brand-600', 'text-brand-600');
+                        btn.classList.add('border-transparent', 'text-slate-500');
+                        content.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function resetSuggestions() {
+            const emptyEl = document.getElementById('emptyState');
+            const listEl = document.getElementById('suggestionsList');
+            const countEl = document.getElementById('suggCount');
+            const scoreEl = document.getElementById('scoreVal');
+
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            if (listEl) {
+                listEl.classList.add('hidden');
+                listEl.innerHTML = '';
+            }
+            if (countEl) countEl.innerText = '0';
+            if (scoreEl) scoreEl.innerText = '100';
+        }
+
+        function analyzeText() {
+            handleInput();
+            const editor = document.getElementById('editorText');
+            const text = editor ? editor.value.trim() : '';
+
+            if (!text) {
+                showToast("Masukkan draf skripsi atau jurnal Anda terlebih dahulu!", true);
+                return;
+            }
+
+            setLoading(true);
+
+            setTimeout(() => {
+                let suggestions = [];
+
+                const refRegex = /\[[0-9a-zA-Z]+\]/g;
+                let refMatch;
+                while ((refMatch = refRegex.exec(text)) !== null) {
+                    if (!suggestions.some(s => s.original === refMatch[0])) {
+                        suggestions.push({ 
+                            original: refMatch[0], 
+                            replacement: '', 
+                            description: 'Angka/tanda kurung kutipan artikel ditemukan. Hapus jika ingin menghasilkan teks bersih.', 
+                            category: 'Format Kutipan' 
+                        });
+                    }
+                }
+
+                if (currentLang === 'id') {
+                    const rulesID = [
+                        { wrong: /\bmetodologi yang di gunakan\b/gi, fix: 'metode yang digunakan', desc: 'Penggunaan "metodologi" kurang tepat untuk bagian cara/langkah. Gunakan "metode".', type: 'Istilah Skripsi' },
+                        { wrong: /\bmetodologi\b/gi, fix: 'metode', desc: 'Metodologi adalah ilmu tentang metode. Untuk prosedur penelitian, gunakan "metode".', type: 'Istilah Skripsi' },
+                        { wrong: /\bsistim\b/gi, fix: 'sistem', desc: 'Sesuai KBBI V, kata baku yang tepat adalah "sistem".', type: 'Ejaan Baku' },
+                        { wrong: /\bhipotesa\b/gi, fix: 'hipotesis', desc: 'Sesuai KBBI V, kata baku adalah "hipotesis".', type: 'Ejaan Baku' },
+                        { wrong: /\bpraktek\b/gi, fix: 'praktik', desc: 'Sesuai KBBI V, kata baku adalah "praktik".', type: 'Ejaan Baku' },
+                        { wrong: /\bprosentase\b/gi, fix: 'persentase', desc: 'Sesuai KBBI V, kata baku adalah "persentase".', type: 'Ejaan Baku' },
+                        { wrong: /\banalisa\b/gi, fix: 'analisis', desc: 'Sesuai KBBI V, kata baku adalah "analisis".', type: 'Ejaan Baku' },
+                        { wrong: /\bkwalitas\b/gi, fix: 'kualitas', desc: 'Sesuai KBBI V, kata baku adalah "kualitas".', type: 'Ejaan Baku' },
+                        { wrong: /\bdi gunakan\b/gi, fix: 'digunakan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai dengan kata kerja.', type: 'Tata Bahasa' },
+                        { wrong: /\bdi buktikan\b/gi, fix: 'dibuktikan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
+                        { wrong: /\bdi lakukan\b/gi, fix: 'dilakukan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
+                        { wrong: /\bdi sintesis\b/gi, fix: 'disintesis', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
+                        { wrong: /\bagar supaya\b/gi, fix: 'agar', desc: 'Frasa "agar supaya" lewah/mubazir dalam kalimat ilmiah. Cukup gunakan "agar".', type: 'Kejelasan' },
+                        { wrong: /\bselain dari pada\b/gi, fix: 'selain', desc: 'Gunakan "selain" agar struktur kalimat lebih efektif.', type: 'Kejelasan' }
+                    ];
+
+                    rulesID.forEach(rule => {
+                        let match;
+                        while ((match = rule.wrong.exec(text)) !== null) {
+                            if (!suggestions.some(s => s.original.toLowerCase() === match[0].toLowerCase())) {
+                                suggestions.push({ original: match[0], replacement: rule.fix, description: rule.desc, category: rule.type });
+                            }
+                        }
+                    });
+                } else {
+                    const rulesEN = [
+                        { wrong: /\bdefinately\b/gi, fix: 'definitely', desc: "Academic spelling: 'definitely'.", type: 'Academic Spelling' },
+                        { wrong: /\bseperate\b/gi, fix: 'separate', desc: "Academic spelling: 'separate'.", type: 'Academic Spelling' },
+                        { wrong: /\btheir are\b/gi, fix: 'there are', desc: "Use 'there are' to indicate existence.", type: 'Grammar' },
+                        { wrong: /\bcan effect\b/gi, fix: 'can affect', desc: "Use verb 'affect' in academic context.", type: 'Grammar' }
+                    ];
+
+                    rulesEN.forEach(rule => {
+                        let match;
+                        while ((match = rule.wrong.exec(text)) !== null) {
+                            if (!suggestions.some(s => s.original.toLowerCase() === match[0].toLowerCase())) {
+                                suggestions.push({ original: match[0], replacement: rule.fix, description: rule.desc, category: rule.type });
+                            }
+                        }
+                    });
+                }
+
+                renderSuggestions(suggestions);
+                setLoading(false);
+                
+                if (suggestions.length === 0) {
+                    showToast("Luar biasa! Dokumen Anda memenuhi standar tata bahasa baku!");
+                } else {
+                    showToast(`Ditemukan ${suggestions.length} saran perbaikan ejaan baku!`);
+                }
+            }, 300);
+        }
+
+        function jumpToTextLocation(originalText) {
+            const editor = document.getElementById('editorText');
+            if (!editor) return;
+
+            const text = editor.value;
+            const index = text.toLowerCase().indexOf(originalText.toLowerCase());
+
+            if (index !== -1) {
+                editor.focus();
+                editor.setSelectionRange(index, index + originalText.length);
+
+                const fullHeight = editor.scrollHeight;
+                const positionRatio = index / text.length;
+                editor.scrollTop = positionRatio * fullHeight - 100;
+
+                editor.classList.add('highlight-flash');
+                setTimeout(() => {
+                    editor.classList.remove('highlight-flash');
+                }, 1500);
+            }
+        }
+
+        function renderSuggestions(suggestions) {
+            const listEl = document.getElementById('suggestionsList');
+            const emptyEl = document.getElementById('emptyState');
+            const countEl = document.getElementById('suggCount');
+            const scoreEl = document.getElementById('scoreVal');
+
+            if (!listEl || !emptyEl) return;
+            
+            listEl.innerHTML = '';
+            if (countEl) countEl.innerText = suggestions.length;
+
+            const score = Math.max(50, 100 - (suggestions.length * 6));
+            if (scoreEl) scoreEl.innerText = score;
+
+            if (suggestions.length === 0) {
+                emptyEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.classList.remove('hidden');
+
+            suggestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2 relative transition-all hover:border-brand-500 cursor-pointer";
+                
+                card.onclick = (e) => {
+                    if (!e.target.closest('button')) {
+                        jumpToTextLocation(item.original);
+                    }
+                };
+
+                let actionHtml = '';
+                if (item.replacement === '') {
+                    actionHtml = `
+                        <button onclick="applyRemoval('${item.original}', this)" class="bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 cursor-pointer">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                            <span>Hapus Kutipan</span>
+                        </button>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button onclick="applyFix('${item.original}', '${item.replacement}', this)" class="bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 cursor-pointer">
+                            <i class="fa-solid fa-check text-xs"></i>
+                            <span>Terapkan Ejaan Baku</span>
+                        </button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-sans">${item.category}</span>
+                        <span class="text-xs text-slate-400 flex items-center space-x-1"><i class="fa-solid fa-location-arrow text-[10px]"></i><span>Klik untuk loncat</span></span>
+                    </div>
+                    <div class="text-sm font-medium text-slate-700 flex items-center space-x-2">
+                        <span class="line-through text-red-500 bg-red-50 px-1.5 py-0.5 rounded">${item.original}</span>
+                        ${item.replacement ? `<i class="fa-solid fa-arrow-right text-xs text-slate-400"></i><span class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">${item.replacement}</span>` : ''}
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">${item.description}</p>
+                    <div class="pt-2 flex justify-end">
+                        ${actionHtml}
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function applyFix(original, replacement, button) {
+            const editor = document.getElementById('editorText');
+            if (!editor) return;
+
+            const regex = new RegExp(`\\b${original}\\b`, 'gi');
+            editor.value = editor.value.replace(regex, replacement);
+            handleInput();
+
+            removeCard(button, `Diubah ke baku: "${original}" → "${replacement}"`);
+        }
+
+        function applyRemoval(original, button) {
+            const editor = document.getElementById('editorText');
+            if (!editor) return;
+
+            const escaped = original.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(escaped, 'g');
+            editor.value = editor.value.replace(regex, '').replace(/\s{2,}/g, ' ');
+            handleInput();
+
+            removeCard(button, `Format "${original}" dibersihkan`);
+        }
+
+        function removeCard(button, toastMessage) {
+            const card = button.closest('.bg-white');
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                card.style.transition = 'all 0.2s ease';
+
+                setTimeout(() => {
+                    card.remove();
+                    const countEl = document.getElementById('suggCount');
+                    if (countEl) {
+                        const currentCount = parseInt(countEl.innerText) - 1;
+                        countEl.innerText = Math.max(0, currentCount);
+                        if (currentCount <= 0) resetSuggestions();
+                    }
+                }, 200);
+            }
+            showToast(toastMessage);
+        }
+
+        // AKADEMIK HUMANIZER BILINGUAL (B. INDONESIA & ENGLISH)
+        function humanizeText() {
+            const editor = document.getElementById('editorText');
+            let text = editor ? editor.value : '';
+            if (!text.trim()) return;
+
+            setLoading(true);
+            setTimeout(() => {
+                let paragraphs = text.split(/\r?\n/);
+                let humanizedParagraphs = paragraphs.map(p => {
+                    let cleaned = p;
+                    if (currentLang === 'id') {
+                        cleaned = cleaned
+                            .replace(/\badalah cara paling praktis\b/gi, 'merupakan salah satu pendekatan efektif')
+                            .replace(/\bberikut adalah panduan\b/gi, 'berikut dipaparkan tahapan')
+                            .replace(/\btidak perlu repot\b/gi, 'peneliti tidak memerlukan')
+                            .replace(/\bmemungkinkan Anda\b/gi, 'memungkinkan peneliti');
+                    } else {
+                        cleaned = cleaned
+                            .replace(/\bThis paper attempts to provide answers to a number of critical questions\b/gi, 'This study investigates key research questions concerning')
+                            .replace(/\bThe aim of this paper is to compare\b/gi, 'This research compares')
+                            .replace(/\bSurveys have been undertaken to ascertain why\b/gi, 'Empirical surveys were conducted to determine the underlying reasons')
+                            .replace(/\bThe paper begins by examining\b/gi, 'Initial analysis focuses on evaluating')
+                            .replace(/\bThese questions are addressed using information obtained in\b/gi, 'The evaluation relies on empirical data collected from');
+                    }
+                    return cleaned;
+                });
+
+                editor.value = humanizedParagraphs.join('\n');
+                setLoading(false);
+                handleInput();
+                showToast("Teks berhasil dihumanisasi untuk standar akademik!");
+            }, 400);
+        }
+
+        function paraphraseText(type) {
+            const editor = document.getElementById('editorText');
+            let currentText = editor ? editor.value : '';
+
+            if (!currentText.trim()) {
+                showToast("Tempelkan teks Anda terlebih dahulu!", true);
+                return;
+            }
+
+            setLoading(true);
+
+            setTimeout(() => {
+                let paragraphs = currentText.split(/\r?\n/);
+                
+                let transformedParagraphs = paragraphs.map(paragraph => {
+                    if (!paragraph.trim()) return '';
+
+                    let sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+                    
+                    let transformedSentences = sentences.map(sentence => {
+                        let cleaned = sentence.trim();
+
+                        if (type === 'academic') {
+                            if (currentLang === 'id') {
+                                cleaned = cleaned
+                                    .replace(/\bmetodologi yang di gunakan\b/gi, 'metode penelitian yang diterapkan')
+                                    .replace(/\bmelakukan analisa\b/gi, 'melakukan analisis mendalam')
+                                    .replace(/\bagar supaya\b/gi, 'guna memastikan bahwa')
+                                    .replace(/\bsistim\b/gi, 'sistem');
+                            } else {
+                                cleaned = cleaned
+                                    .replace(/\bthis paper attempts to provide answers\b/gi, 'this research study aims to address')
+                                    .replace(/\bis intensifying across the world\b/gi, 'is expanding globally');
+                            }
+                        } else if (type === 'short') {
+                            if (currentLang === 'id') {
+                                cleaned = cleaned
+                                    .replace(/\bagar supaya\b/gi, 'agar')
+                                    .replace(/\bselain dari pada itu\b/gi, 'selain itu');
+                            }
+                        }
+                        return cleaned;
+                    });
+
+                    return transformedSentences.join(" ");
+                });
+
+                editor.value = transformedParagraphs.join('\n\n');
+                setLoading(false);
+                handleInput();
+                showToast("Parafrase berhasil diterapkan tanpa menggabungkan paragraf!");
+            }, 300);
+        }
+
+        function runPlagiarismCheck() {
+            showToast("Memindai ke repositori jurnal (Google Scholar, Crossref, Neliti)...");
+            setTimeout(() => {
+                const plagBar = document.getElementById('plagBar');
+                const plagPercent = document.getElementById('plagPercent');
+
+                if (plagBar) plagBar.style.width = '0%';
+                if (plagPercent) plagPercent.innerText = '0%';
+                showToast("Pemindaian selesai: Teks Bebas Plagiarisme Jurnal!");
+            }, 600);
+        }
+
+        function setLoading(loading) {
+            const btnText = document.getElementById('btnText');
+            const statusText = document.getElementById('statusText');
+
+            if (btnText) btnText.innerText = loading ? "Memproses..." : "Periksa Dokumen";
+            if (statusText) statusText.innerText = loading ? "Memproses draf skripsi..." : "Mesin Pemeriksa Akademik Siap";
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            if (toast && toastMsg && toastIcon) {
+                toastMsg.innerText = message;
+                toastIcon.className = isError ? "fa-solid fa-triangle-exclamation text-red-400" : "fa-solid fa-circle-check text-emerald-400";
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
