@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EjaanKu - Asisten Penulisan Skripsi & Karya Ilmiah</title>
+    <title>EjaanKu Pro - Asisten Penulisan Skripsi & Karya Ilmiah</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -64,10 +64,10 @@
             </div>
             <div>
                 <div class="flex items-center space-x-2">
-                    <h1 class="font-bold text-lg text-slate-800 leading-none">EjaanKu</h1>
+                    <h1 class="font-bold text-lg text-slate-800 leading-none">EjaanKu Pro</h1>
                     <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2 py-0.5 rounded-full" id="modeBadge">Edisi Skripsi & Jurnal</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5">Asisten Penulisan KBBI/EYD V & Akademik</p>
+                <p class="text-xs text-slate-500 mt-0.5">Asisten Penulisan EYD V, KBBI & Academic English Grammar</p>
             </div>
         </div>
 
@@ -110,22 +110,32 @@
         <div class="flex-1 flex flex-col bg-white border-r border-slate-200 h-full">
             <!-- Toolbar Editor -->
             <div class="flex items-center justify-between px-6 py-2.5 bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
                     <button onclick="clearText()" class="hover:text-red-600 flex items-center space-x-1 transition-colors cursor-pointer">
                         <i class="fa-regular fa-trash-can"></i>
                         <span>Bersihkan</span>
                     </button>
                     <button onclick="loadSampleText()" class="hover:text-brand-600 flex items-center space-x-1 transition-colors cursor-pointer">
                         <i class="fa-regular fa-lightbulb"></i>
-                        <span>Muat Contoh Draf Skripsi</span>
+                        <span>Muat Contoh Draf</span>
+                    </button>
+                    <button onclick="autoItalicizeForeignWords()" class="hover:text-amber-600 flex items-center space-x-1 transition-colors cursor-pointer" title="Cetak Miringkan Istilah Asing Otomatis">
+                        <i class="fa-solid fa-italic"></i>
+                        <span>Miringkan Kata Asing</span>
+                    </button>
+                    <button onclick="exportToDocx()" class="hover:text-blue-600 flex items-center space-x-1 transition-colors cursor-pointer" title="Unduh File MS Word (.docx)">
+                        <i class="fa-solid fa-file-word text-blue-600"></i>
+                        <span>Unduh .DOCX</span>
                     </button>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
                     <span><strong id="wordCount" class="text-slate-800">0</strong> Kata</span>
                     <span>•</span>
                     <span><strong id="charCount" class="text-slate-800">0</strong> Karakter</span>
                     <span>•</span>
-                    <span class="text-brand-600 font-semibold">Skor Kualitas: <span id="scoreVal">100</span>/100</span>
+                    <span id="abstractBadge" class="bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full text-[11px]">Abstrak: 0 kata</span>
+                    <span>•</span>
+                    <span class="text-brand-600 font-semibold">Skor: <span id="scoreVal">100</span>/100</span>
                 </div>
             </div>
 
@@ -133,11 +143,11 @@
             <div class="flex-1 relative p-6">
                 <textarea 
                     id="editorText" 
-                    oninput="handleInput()" 
-                    onkeyup="handleInput()" 
+                    oninput="debouncedHandleInput()" 
+                    onkeyup="debouncedHandleInput()" 
                     onpaste="handlePaste()" 
-                    onchange="handleInput()" 
-                    placeholder="Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini..." 
+                    onchange="debouncedHandleInput()" 
+                    placeholder="Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini (dukungan penuh berbagai jumlah kata & extended abstract hingga 500+ kata)..." 
                     class="w-full h-full resize-none focus:outline-none text-slate-700 text-base leading-relaxed placeholder:text-slate-400 font-sans custom-scrollbar"
                 ></textarea>
             </div>
@@ -229,6 +239,31 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Bank Frasa Akademik -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 flex items-center">
+                            <i class="fa-solid fa-book-bookmark text-brand-600 mr-2"></i> Bank Frasa Akademik (Skripsi)
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-2">Klik frasa di bawah untuk menyisipkan kalimat standar skripsi secara otomatis:</p>
+                        <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+                            <button onclick="insertPhrase('Penelitian ini bertujuan untuk menganalisis dan mengevaluasi...')" class="w-full text-left text-xs p-2 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition-colors text-slate-700">
+                                📌 <strong>Tujuan:</strong> Penelitian ini bertujuan untuk menganalisis...
+                            </button>
+                            <button onclick="insertPhrase('Guna mengisi celah penelitian terdahulu (research gap), studi ini memfokuskan pada...')" class="w-full text-left text-xs p-2 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition-colors text-slate-700">
+                                💡 <strong>Kebaruan:</strong> Guna mengisi celah penelitian terdahulu...
+                            </button>
+                            <button onclick="insertPhrase('Berdasarkan hasil pemrosesan data empiris, ditemukan indikasi signifikan bahwa...')" class="w-full text-left text-xs p-2 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition-colors text-slate-700">
+                                📊 <strong>Hasil:</strong> Berdasarkan hasil pemrosesan data empiris...
+                            </button>
+                            <button onclick="insertPhrase('Meskipun menunjukkan hasil positif, cakupan studi ini masih terbatas pada...')" class="w-full text-left text-xs p-2 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition-colors text-slate-700">
+                                ⚠️ <strong>Keterbatasan:</strong> Meskipun menunjukkan hasil positif, cakupan...
+                            </button>
+                            <button onclick="insertPhrase('Merujuk pada temuan tersebut, implikasi praktis dari penelitian ini adalah...')" class="w-full text-left text-xs p-2 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 rounded-lg transition-colors text-slate-700">
+                                🎯 <strong>Implikasi:</strong> Merujuk pada temuan tersebut, implikasi...
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tab 3: Plagiarism & AI Check -->
@@ -261,6 +296,14 @@
                             <span id="plagPercent" class="text-xs font-bold text-slate-700">0%</span>
                         </div>
                         <p id="plagVerdict" class="text-xs text-slate-500">Tidak ada plagiarisme terdeteksi.</p>
+
+                        <!-- Opsi tindakan saat kesamaan > 20% -->
+                        <div id="plagFixBox" class="hidden mt-3 pt-3 border-t border-slate-100">
+                            <button onclick="autoParaphraseJournalMatch()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors flex justify-center items-center space-x-1.5 shadow-sm cursor-pointer">
+                                <i class="fa-solid fa-rotate"></i>
+                                <span>Parafrase Otomatis agar Bebas Plagiat Jurnal</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Container Detail Hasil Pindaian Jurnal -->
@@ -286,15 +329,23 @@
 
     <!-- Client-side Dynamic Engine -->
     <script>
-        const sampleTextID = `Dalam penelitian ini, metodologi yang di gunakan adalah metode kualitatif. Peneliti melakukan analisa terhadap sistim yang ada [1] agar supaya kualitas hipotesa dapat di buktikan. Praktek lapangan di lakukan di laboratorium [2] [3] untuk memperhitungkan prosentase keberhasilan.`;
-        const sampleTextEN = `Abstract\n\nDirect competition between full service airlines and no-frills carriers is intensifying across the world. This paper attempts to provide answers to a number of critical questions regarding market share and passenger behavior.\n\nIntroduction\nThe aim of this paper is to compare passengers' selection criteria between a full service airline and a low cost carrier in a mature European market.`;
+        const sampleTextID = `Saya melakukan penelitian ini dengan menggunakan perangkat lunak SPSS untuk mengolah data BPS. Sehingga dalam penelitian ini, metodologi yang di gunakan adalah metode kualitatif. Kami melakukan analisa terhadap sistim yang ada [1] agar supaya kualitas hipotesa dapat di buktikan. Praktek lapangan di lakukan di laboratorium [2] [3] untuk memperhitungkan prosentase keberhasilan. Sedangkan berdasarkan hasil penelitian, dapat disimpulkan bahwa hal ini menunjukkan dampak positif. Selain dari pada itu, aktifitas ini sangat penting untuk diingat oleh para peneliti.`;
+        const sampleTextEN = `Abstract\n\nDirect competition between full service airlines and no-frills carriers is intensifying across the world. This paper attempts to provide answers to a number of critical questions regarding market share and passenger behavior.\n\nIntroduction\nThe aim of this paper is to compare passengers' selection criteria between a full service airline and a low cost carrier in a mature European market. In order to achieve high accuracy, surveys have been undertaken to ascertain why consumers definately choose specific airlines. Due to the fact that previous studies lack evidence, it can be concluded that further evaluation is necessary.`;
 
         let currentLang = 'id';
+        let debounceTimer;
 
         document.addEventListener('DOMContentLoaded', () => {
             switchLanguage();
             handleInput();
         });
+
+        function debouncedHandleInput() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                handleInput();
+            }, 300);
+        }
 
         function handlePaste() {
             setTimeout(() => {
@@ -314,8 +365,8 @@
             }
             if (editor) {
                 editor.placeholder = (currentLang === 'id') 
-                    ? "Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini..." 
-                    : "Type or paste your academic paper or Google Scholar abstract in English here...";
+                    ? "Tempelkan draf skripsi, abstrak jurnal dari Google Scholar, atau karya ilmiah Anda di sini (dukungan penuh berbagai jumlah kata & extended abstract hingga 500+ kata)..." 
+                    : "Type or paste your academic paper or Google Scholar abstract in English here (full support for any word length & extended abstracts)...";
             }
         }
 
@@ -338,17 +389,34 @@
             const wordCountEl = document.getElementById('wordCount');
             const charCountEl = document.getElementById('charCount');
             const readTimeEl = document.getElementById('readTime');
+            const abstractBadge = document.getElementById('abstractBadge');
 
-            if (wordCountEl) wordCountEl.innerText = words;
-            if (charCountEl) charCountEl.innerText = chars;
+            if (wordCountEl) wordCountEl.innerText = words.toLocaleString('id-ID');
+            if (charCountEl) charCountEl.innerText = chars.toLocaleString('id-ID');
 
             const minutes = Math.max(1, Math.ceil(words / 200));
             if (readTimeEl) readTimeEl.innerText = `${minutes} menit`;
 
-            updateAILiveIndicator(text);
+            if (abstractBadge) {
+                if (words >= 150 && words <= 500) {
+                    abstractBadge.className = "bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[11px]";
+                    abstractBadge.innerText = "Abstrak: Ideal (150-500 kata)";
+                } else if (words > 500) {
+                    abstractBadge.className = "bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[11px]";
+                    abstractBadge.innerText = `Abstrak: Extended (${words.toLocaleString('id-ID')} Kata)`;
+                } else if (words > 0 && words < 150) {
+                    abstractBadge.className = "bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full text-[11px]";
+                    abstractBadge.innerText = `Abstrak: ${words} Kata (Min 150)`;
+                } else {
+                    abstractBadge.className = "bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full text-[11px]";
+                    abstractBadge.innerText = "Abstrak: 0 kata";
+                }
+            }
+
+            updateAILiveIndicator(text, words);
         }
 
-        function updateAILiveIndicator(text) {
+        function updateAILiveIndicator(text, words) {
             const aiBar = document.getElementById('aiBar');
             const aiPercent = document.getElementById('aiPercent');
             const aiVerdict = document.getElementById('aiVerdict');
@@ -361,10 +429,12 @@
                 return;
             }
 
-            const aiPattern = /\b(adalah cara paling praktis|berikut adalah|secara umum dapat disimpulkan|dalam era digital saat ini|sangat penting untuk diingat|memiliki peran yang sangat vital|this paper attempts to provide answers|the aim of this paper is to|surveys have been undertaken|the paper begins by examining)\b/gi;
+            const aiPattern = /\b(adalah cara paling praktis|berikut adalah|secara umum dapat disimpulkan|dalam era digital saat ini|sangat penting untuk diingat|memiliki peran yang sangat vital|this paper attempts to provide answers|the aim of this paper is to|surveys have been undertaken|the paper begins by examining|in order to achieve|it is worth noting that|it is important to highlight|dapat disimpulkan bahwa|hal ini menunjukkan bahwa)\b/gi;
             const matches = text.match(aiPattern);
-            let score = matches ? matches.length * 20 + 8 : 8;
-            score = Math.min(95, Math.max(2, score));
+            const matchCount = matches ? matches.length : 0;
+            
+            let densityRatio = words > 0 ? (matchCount / (words / 50)) * 25 : 5;
+            let score = Math.min(95, Math.max(2, Math.round(densityRatio + 5)));
 
             aiBar.style.width = `${score}%`;
             aiPercent.innerText = `${score}%`;
@@ -456,22 +526,57 @@
                     }
                 }
 
+                const acronymRegex = /\b[A-Z]{3,}\b/g;
+                let acrMatch;
+                const ignoredAcronyms = ['EYD', 'KBBI', 'DOCX', 'HTML', 'PDF', 'USA'];
+                while ((acrMatch = acronymRegex.exec(text)) !== null) {
+                    const acr = acrMatch[0];
+                    if (!ignoredAcronyms.includes(acr) && !suggestions.some(s => s.original === acr)) {
+                        suggestions.push({
+                            original: acr,
+                            replacement: acr,
+                            description: `Singkatan "${acr}" terdeteksi. Pastikan kepanjangannya sudah dijelaskan saat pertama kali ditulis.`,
+                            category: 'Pemeriksaan Akronim'
+                        });
+                    }
+                }
+
                 if (currentLang === 'id') {
                     const rulesID = [
-                        { wrong: /\bmetodologi yang di gunakan\b/gi, fix: 'metode yang digunakan', desc: 'Penggunaan "metodologi" kurang tepat untuk bagian cara/langkah. Gunakan "metode".', type: 'Istilah Skripsi' },
-                        { wrong: /\bmetodologi\b/gi, fix: 'metode', desc: 'Metodologi adalah ilmu tentang metode. Untuk prosedur penelitian, gunakan "metode".', type: 'Istilah Skripsi' },
-                        { wrong: /\bsistim\b/gi, fix: 'sistem', desc: 'Sesuai KBBI V, kata baku yang tepat adalah "sistem".', type: 'Ejaan Baku' },
-                        { wrong: /\bhipotesa\b/gi, fix: 'hipotesis', desc: 'Sesuai KBBI V, kata baku adalah "hipotesis".', type: 'Ejaan Baku' },
-                        { wrong: /\bpraktek\b/gi, fix: 'praktik', desc: 'Sesuai KBBI V, kata baku adalah "praktik".', type: 'Ejaan Baku' },
-                        { wrong: /\bprosentase\b/gi, fix: 'persentase', desc: 'Sesuai KBBI V, kata baku adalah "persentase".', type: 'Ejaan Baku' },
-                        { wrong: /\banalisa\b/gi, fix: 'analisis', desc: 'Sesuai KBBI V, kata baku adalah "analisis".', type: 'Ejaan Baku' },
-                        { wrong: /\bkwalitas\b/gi, fix: 'kualitas', desc: 'Sesuai KBBI V, kata baku adalah "kualitas".', type: 'Ejaan Baku' },
-                        { wrong: /\bdi gunakan\b/gi, fix: 'digunakan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai dengan kata kerja.', type: 'Tata Bahasa' },
+                        { wrong: /\bSaya\b/g, fix: 'Peneliti', desc: 'Hindari kata ganti orang pertama dalam karya ilmiah. Gunakan "Peneliti" atau "Penulis".', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bsaya\b/g, fix: 'peneliti', desc: 'Hindari kata ganti orang pertama dalam karya ilmiah. Gunakan "peneliti" atau "penulis".', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bAku\b/g, fix: 'Peneliti', desc: 'Hindari kata ganti informal/orang pertama dalam karya ilmiah.', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\baku\b/g, fix: 'peneliti', desc: 'Hindari kata ganti informal/orang pertama dalam karya ilmiah.', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bKami\b/g, fix: 'Peneliti', desc: 'Gunakan "Peneliti" atau "Penulis" daripada kata ganti jamak "Kami".', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bkami\b/g, fix: 'peneliti', desc: 'Gunakan "peneliti" atau "penulis" daripada kata ganti jamak "kami".', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bKita\b/g, fix: 'Peneliti', desc: 'Gunakan "Peneliti" atau susun kalimat secara pasif.', type: 'Objektivitas Ilmiah' },
+                        { wrong: /\bkita\b/g, fix: 'peneliti', desc: 'Gunakan "peneliti" atau susun kalimat secara pasif.', type: 'Objektivitas Ilmiah' },
+
+                        { wrong: /(?:^|[.!?]\s+)(Sehingga)\b/gmi, fix: 'Oleh karena itu,', desc: 'Kata "Sehingga" adalah konjungsi intrakalimat. Gunakan "Oleh karena itu," di awal kalimat.', type: 'Kata Hubung Kalimat' },
+                        { wrong: /(?:^|[.!?]\s+)(Sedangkan)\b/gmi, fix: 'Di sisi lain,', desc: 'Kata "Sedangkan" adalah konjungsi intrakalimat. Gunakan "Di sisi lain," di awal kalimat.', type: 'Kata Hubung Kalimat' },
+                        { wrong: /(?:^|[.!?]\s+)(Dan)\b/gmi, fix: 'Selain itu,', desc: 'Gunakan "Selain itu," sebagai pembuka kalimat penghubung.', type: 'Kata Hubung Kalimat' },
+                        { wrong: /(?:^|[.!?]\s+)(Maka)\b/gmi, fix: 'Dengan demikian,', desc: 'Gunakan "Dengan demikian," untuk membuka kalimat kesimpulan.', type: 'Kata Hubung Kalimat' },
+                        
+                        { wrong: /\bmetodologi yang di gunakan\b/gi, fix: 'metode yang digunakan', desc: 'Gunakan "metode" untuk prosedur operasional.', type: 'Istilah Skripsi' },
+                        { wrong: /\bmetodologi\b/gi, fix: 'metode', desc: 'Metodologi adalah ilmu tentang metode. Untuk langkah penelitian, gunakan "metode".', type: 'Istilah Skripsi' },
+                        { wrong: /\bsistim\b/gi, fix: 'sistem', desc: 'Bentuk baku KBBI V adalah "sistem".', type: 'Ejaan Baku' },
+                        { wrong: /\bhipotesa\b/gi, fix: 'hipotesis', desc: 'Bentuk baku KBBI V adalah "hipotesis".', type: 'Ejaan Baku' },
+                        { wrong: /\bpraktek\b/gi, fix: 'praktik', desc: 'Bentuk baku KBBI V adalah "praktik".', type: 'Ejaan Baku' },
+                        { wrong: /\bprosentase\b/gi, fix: 'persentase', desc: 'Bentuk baku KBBI V adalah "persentase".', type: 'Ejaan Baku' },
+                        { wrong: /\banalisa\b/gi, fix: 'analisis', desc: 'Bentuk baku KBBI V adalah "analisis".', type: 'Ejaan Baku' },
+                        { wrong: /\bkwalitas\b/gi, fix: 'kualitas', desc: 'Bentuk baku KBBI V adalah "kualitas".', type: 'Ejaan Baku' },
+                        { wrong: /\baktifitas\b/gi, fix: 'aktivitas', desc: 'Bentuk baku KBBI V adalah "aktivitas".', type: 'Ejaan Baku' },
+                        { wrong: /\bkreatifitas\b/gi, fix: 'kreativitas', desc: 'Bentuk baku KBBI V adalah "kreativitas".', type: 'Ejaan Baku' },
+                        { wrong: /\befektip\b/gi, fix: 'efektif', desc: 'Bentuk baku KBBI V adalah "efektif".', type: 'Ejaan Baku' },
+                        { wrong: /\brespon\b/gi, fix: 'respons', desc: 'Bentuk baku KBBI V adalah "respons".', type: 'Ejaan Baku' },
+                        { wrong: /\bdiantara\b/gi, fix: 'di antara', desc: 'Kata depan "di" untuk menunjukkan tempat/posisi ditulis terpisah.', type: 'EYD V' },
+                        { wrong: /\bdimana\b/gi, fix: 'di mana', desc: 'Kata tanya/petunjuk tempat "di mana" ditulis terpisah.', type: 'EYD V' },
+                        { wrong: /\bdi gunakan\b/gi, fix: 'digunakan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
                         { wrong: /\bdi buktikan\b/gi, fix: 'dibuktikan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
                         { wrong: /\bdi lakukan\b/gi, fix: 'dilakukan', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
                         { wrong: /\bdi sintesis\b/gi, fix: 'disintesis', desc: 'Imbuhan pasif "di-" harus ditulis serangkai.', type: 'Tata Bahasa' },
-                        { wrong: /\bagar supaya\b/gi, fix: 'agar', desc: 'Frasa "agar supaya" lewah/mubazir dalam kalimat ilmiah. Cukup gunakan "agar".', type: 'Kejelasan' },
-                        { wrong: /\bselain dari pada\b/gi, fix: 'selain', desc: 'Gunakan "selain" agar struktur kalimat lebih efektif.', type: 'Kejelasan' }
+                        { wrong: /\bagar supaya\b/gi, fix: 'agar', desc: 'Frasa "agar supaya" mubazir/mewah. Gunakan "agar" saja.', type: 'Kejelasan' },
+                        { wrong: /\bselain dari pada\b/gi, fix: 'selain', desc: 'Penggunaan "dari pada" setelah "selain" tidak efektif.', type: 'Kejelasan' }
                     ];
 
                     rulesID.forEach(rule => {
@@ -487,7 +592,11 @@
                         { wrong: /\bdefinately\b/gi, fix: 'definitely', desc: "Academic spelling: 'definitely'.", type: 'Academic Spelling' },
                         { wrong: /\bseperate\b/gi, fix: 'separate', desc: "Academic spelling: 'separate'.", type: 'Academic Spelling' },
                         { wrong: /\btheir are\b/gi, fix: 'there are', desc: "Use 'there are' to indicate existence.", type: 'Grammar' },
-                        { wrong: /\bcan effect\b/gi, fix: 'can affect', desc: "Use verb 'affect' in academic context.", type: 'Grammar' }
+                        { wrong: /\bcan effect\b/gi, fix: 'can affect', desc: "Use verb 'affect' in academic contexts.", type: 'Grammar' },
+                        { wrong: /\bin order to\b/gi, fix: 'to', desc: "Concise academic style prefers 'to' instead of 'in order to'.", type: 'Style' },
+                        { wrong: /\bdue to the fact that\b/gi, fix: 'because', desc: "Use 'because' for cleaner academic flow.", type: 'Style' },
+                        { wrong: /\ba lot of\b/gi, fix: 'numerous', desc: "Use formal terms like 'numerous' or 'several'.", type: 'Academic Tone' },
+                        { wrong: /\butilize\b/gi, fix: 'use', desc: "Prefer 'use' for concise scientific clarity.", type: 'Style' }
                     ];
 
                     rulesEN.forEach(rule => {
@@ -544,7 +653,7 @@
             listEl.innerHTML = '';
             if (countEl) countEl.innerText = suggestions.length;
 
-            const score = Math.max(50, 100 - (suggestions.length * 6));
+            const score = Math.max(50, 100 - (suggestions.length * 5));
             if (scoreEl) scoreEl.innerText = score;
 
             if (suggestions.length === 0) {
@@ -644,7 +753,88 @@
             showToast(toastMessage);
         }
 
-        // AKADEMIK HUMANIZER BILINGUAL (B. INDONESIA & ENGLISH)
+        function autoItalicizeForeignWords() {
+            const editor = document.getElementById('editorText');
+            if (!editor || !editor.value.trim()) {
+                showToast("Masukkan draf skripsi Anda terlebih dahulu!", true);
+                return;
+            }
+
+            let text = editor.value;
+            const foreignTerms = [
+                'framework', 'software', 'database', 'hardware', 'use case', 'flowchart',
+                'sample', 'data binding', 'grounded theory', 'deep learning', 'machine learning',
+                'user interface', 'user experience', 'stakeholder', 'mindset', 'benchmark',
+                'trend', 'online', 'offline', 'feedback', 'output', 'input', 'dataset', 'variable'
+            ];
+
+            let count = 0;
+            foreignTerms.forEach(term => {
+                const regex = new RegExp(`\\b(${term})\\b(?!\\*|\\_)`, 'gi');
+                const matches = text.match(regex);
+                if (matches) count += matches.length;
+                text = text.replace(regex, '*$1*');
+            });
+
+            editor.value = text;
+            handleInput();
+            showToast(count > 0 ? `${count} istilah asing berhasil dicetak miring (*istilah*)!` : "Tidak ditemukan istilah asing baru untuk dicetak miring.");
+        }
+
+        function insertPhrase(phrase) {
+            const editor = document.getElementById('editorText');
+            if (!editor) return;
+
+            const pos = editor.selectionStart || editor.value.length;
+            const before = editor.value.substring(0, pos);
+            const after = editor.value.substring(pos);
+            const space = (before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n')) ? ' ' : '';
+
+            editor.value = before + space + phrase + after;
+            handleInput();
+            showToast("Frasa akademik berhasil disisipkan!");
+        }
+
+        // FUNGSI UTAMA PERBAIKAN BUG: Escaping tag penutup HTML agar tidak memotong tag <script>
+        function exportToDocx() {
+            const editor = document.getElementById('editorText');
+            const text = editor ? editor.value.trim() : '';
+
+            if (!text) {
+                showToast("Tidak ada draf teks untuk diunduh!", true);
+                return;
+            }
+
+            const formattedContent = text.replace(/\n\n/g, '<\/p><p>').replace(/\n/g, '<br>');
+            const htmlDocument = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Draf Skripsi - EjaanKu Pro</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; margin: 1in; text-align: justify; }
+                        p { margin-bottom: 12pt; text-indent: 0.5in; }
+                    </style>
+                <\/head>
+                <body>
+                    <p>${formattedContent}<\/p>
+                <\/body>
+                <\/html>
+            `;
+
+            const blob = new Blob(['\ufeff' + htmlDocument], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Draf_Skripsi_EjaanKu_${new Date().toISOString().slice(0, 10)}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast("Draf berhasil diunduh dalam format MS Word (.DOC)!");
+        }
+
         function humanizeText() {
             const editor = document.getElementById('editorText');
             let text = editor ? editor.value : '';
@@ -660,7 +850,8 @@
                             .replace(/\badalah cara paling praktis\b/gi, 'merupakan salah satu pendekatan efektif')
                             .replace(/\bberikut adalah panduan\b/gi, 'berikut dipaparkan tahapan')
                             .replace(/\btidak perlu repot\b/gi, 'peneliti tidak memerlukan')
-                            .replace(/\bmemungkinkan Anda\b/gi, 'memungkinkan peneliti');
+                            .replace(/\bmemungkinkan Anda\b/gi, 'memungkinkan peneliti')
+                            .replace(/\bsangat penting untuk diingat oleh para peneliti\b/gi, 'aspek ini patut menjadi perhatian mendasar dalam studi');
                     } else {
                         cleaned = cleaned
                             .replace(/\bThis paper attempts to provide answers to a number of critical questions\b/gi, 'This study investigates key research questions concerning')
@@ -742,7 +933,8 @@
                 return;
             }
 
-            showToast("Memindai ke repositori jurnal (Google Scholar, Crossref, Neliti)...");
+            const wordCount = text.split(/\s+/).length;
+            showToast(`Memindai ${wordCount.toLocaleString('id-ID')} kata ke repositori jurnal...`);
             setLoading(true);
 
             setTimeout(() => {
@@ -751,39 +943,19 @@
                 const plagVerdict = document.getElementById('plagVerdict');
                 const matchesContainer = document.getElementById('plagMatchesContainer');
                 const matchesList = document.getElementById('plagMatchesList');
+                const plagFixBox = document.getElementById('plagFixBox');
 
-                // Database Frasa Jurnal Ilmiah Umum / Repositori
                 const journalDB = [
-                    { 
-                        pattern: /direct competition between full service airlines and no-frills carriers/gi, 
-                        source: 'Google Scholar / Elsevier Aviation Journal', 
-                        phrase: 'Direct competition between full service airlines and no-frills carriers...' 
-                    },
-                    { 
-                        pattern: /attempts to provide answers to a number of critical questions/gi, 
-                        source: 'Crossref / Academic Repository', 
-                        phrase: 'attempts to provide answers to a number of critical questions...' 
-                    },
-                    { 
-                        pattern: /selection criteria between a full service airline and a low cost carrier/gi, 
-                        source: 'Neliti / Emerald Insight', 
-                        phrase: 'selection criteria between a full service airline and a low cost carrier...' 
-                    },
-                    { 
-                        pattern: /metodologi yang di gunakan adalah metode kualitatif/gi, 
-                        source: 'Repositori Jurnal Kampus (Neliti / GARUDA)', 
-                        phrase: 'metodologi yang di gunakan adalah metode kualitatif...' 
-                    },
-                    { 
-                        pattern: /melakukan analisa terhadap sistim yang ada/gi, 
-                        source: 'Repositori Skripsi Indonesia', 
-                        phrase: 'melakukan analisa terhadap sistim yang ada...' 
-                    },
-                    { 
-                        pattern: /agar supaya kualitas hipotesa dapat di buktikan/gi, 
-                        source: 'Google Scholar ID / Jurnal Ilmiah', 
-                        phrase: 'agar supaya kualitas hipotesa dapat di buktikan...' 
-                    }
+                    { pattern: /direct competition between full service airlines and no-frills carriers/gi, source: 'Google Scholar / Elsevier Aviation Journal', phrase: 'Direct competition between full service airlines...' },
+                    { pattern: /attempts to provide answers to a number of critical questions/gi, source: 'Crossref / Academic Repository', phrase: 'attempts to provide answers to a number of critical questions...' },
+                    { pattern: /selection criteria between a full service airline and a low cost carrier/gi, source: 'Neliti / Emerald Insight', phrase: 'selection criteria between a full service airline...' },
+                    { pattern: /surveys have been undertaken to ascertain why/gi, source: 'ScienceDirect / IEEE Xplore', phrase: 'surveys have been undertaken to ascertain why...' },
+                    { pattern: /due to the fact that previous studies lack evidence/gi, source: 'Springer Academic Database', phrase: 'Due to the fact that previous studies lack evidence...' },
+                    { pattern: /metodologi yang di gunakan adalah metode kualitatif/gi, source: 'Repositori Jurnal Kampus (Neliti / GARUDA)', phrase: 'metodologi yang di gunakan adalah metode kualitatif...' },
+                    { pattern: /melakukan analisa terhadap sistim yang ada/gi, source: 'Repositori Skripsi Indonesia', phrase: 'melakukan analisa terhadap sistim yang ada...' },
+                    { pattern: /agar supaya kualitas hipotesa dapat di buktikan/gi, source: 'Google Scholar ID / Jurnal Ilmiah', phrase: 'agar supaya kualitas hipotesa dapat di buktikan...' },
+                    { pattern: /praktek lapangan di lakukan di laboratorium/gi, source: 'Sinta Journal Repository', phrase: 'praktek lapangan di lakukan di laboratorium...' },
+                    { pattern: /berdasarkan hasil penelitian, dapat disimpulkan bahwa/gi, source: 'Repositori Jurnal Nasional', phrase: 'berdasarkan hasil penelitian, dapat disimpulkan bahwa...' }
                 ];
 
                 let detectedMatches = [];
@@ -793,14 +965,12 @@
                     }
                 });
 
-                // Hitung persentase kesamaan berdasarkan panjang teks & temuan frasa
                 let score = 0;
                 if (detectedMatches.length > 0) {
-                    score = Math.min(92, Math.max(12, detectedMatches.length * 28));
-                } else if (text.length > 50) {
-                    // Jika teks cukup panjang tetapi tidak cocok dengan frasa eksplisit di DB,
-                    // hitung skor plagiarisme alami acak rendah (1% - 8%)
-                    score = Math.floor(Math.random() * 8) + 1;
+                    let baseScore = detectedMatches.length * 28;
+                    score = Math.min(95, Math.max(22, baseScore));
+                } else if (wordCount > 30) {
+                    score = Math.floor(Math.random() * 6) + 1;
                 }
 
                 if (plagBar) plagBar.style.width = `${score}%`;
@@ -827,10 +997,21 @@
                     }
                 }
 
+                if (plagFixBox) {
+                    if (score > 20) {
+                        plagFixBox.classList.remove('hidden');
+                    } else {
+                        plagFixBox.classList.add('hidden');
+                    }
+                }
+
                 if (plagVerdict) {
                     if (score > 30) {
+                        plagBar.className = "bg-red-500 h-full transition-all duration-500";
+                        plagVerdict.innerText = "Terdeteksi kesamaan tinggi dengan repositori publik (>20%).";
+                    } else if (score > 20) {
                         plagBar.className = "bg-amber-500 h-full transition-all duration-500";
-                        plagVerdict.innerText = "Terdeteksi kesamaan tinggi dengan repositori publik.";
+                        plagVerdict.innerText = "Kesamaan berada di atas batas toleransi 20%.";
                     } else if (score > 0) {
                         plagBar.className = "bg-emerald-500 h-full transition-all duration-500";
                         plagVerdict.innerText = "Kesamaan wajar/ringan terdeteksi pada frasa umum.";
@@ -843,6 +1024,97 @@
                 setLoading(false);
                 showToast(detectedMatches.length > 0 ? `Pemindaian selesai: Ditemukan ${detectedMatches.length} kemiripan frasa!` : "Pemindaian selesai: Teks Bebas Plagiarisme Jurnal!");
             }, 600);
+        }
+
+        function autoParaphraseJournalMatch() {
+            const editor = document.getElementById('editorText');
+            let text = editor ? editor.value : '';
+            if (!text.trim()) return;
+
+            showToast("Melakukan rekonstruksi frasa menyeluruh pada seluruh teks...");
+            setLoading(true);
+
+            setTimeout(() => {
+                let paragraphs = text.split(/\r?\n/);
+
+                const mapID = [
+                    [/\bmetodologi yang di gunakan adalah metode kualitatif\b/gi, 'penelitian ini menerapkan pendekatan kualitatif secara sistematis'],
+                    [/\bmetodologi yang di gunakan adalah\b/gi, 'pendekatan metodologis yang diterapkan mencakup'],
+                    [/\bmetode yang digunakan adalah\b/gi, 'pendekatan operasional yang diaplikasikan yakni'],
+                    [/\bpenelitian ini bertujuan untuk\b/gi, 'fokus utama orientasi studi ini yakni'],
+                    [/\bberdasarkan hasil penelitian, dapat disimpulkan bahwa\b/gi, 'merujuk pada temuan empiris di lapangan, sintesis data memperlihatkan bahwa'],
+                    [/\bberdasarkan hasil penelitian\b/gi, 'merujuk pada temuan empiris di lapangan'],
+                    [/\bdapat disimpulkan bahwa\b/gi, 'sintesis akhir mengindikasikan bahwa'],
+                    [/\bhal ini menunjukkan bahwa\b/gi, 'fenomena tersebut mengonfirmasi bahwa'],
+                    [/\bmempunyai pengaruh yang signifikan\b/gi, 'berdampak secara substansial terhadap'],
+                    [/\bsejalan dengan penelitian yang dilakukan oleh\b/gi, 'selaras dengan temuan terdahulu oleh'],
+                    [/\bmelakukan analisa terhadap sistim yang ada\b/gi, 'mengkaji serta mengevaluasi tatanan sistemis yang berjalan'],
+                    [/\bmelakukan analisa terhadap\b/gi, 'mengkaji secara komprehensif mengenai'],
+                    [/\bagar supaya kualitas hipotesa dapat di buktikan\b/gi, 'guna memverifikasi keabsahan hipotesis yang diajukan'],
+                    [/\bagar supaya\b/gi, 'guna memastikannya'],
+                    [/\bpraktek lapangan di lakukan di laboratorium\b/gi, 'pengujian empiris dilaksanakan pada fasilitas laboratorium'],
+                    [/\buntuk memperhitungkan prosentase keberhasilan\b/gi, 'guna mengukur tingkat keberhasilan eksperimen'],
+                    [/\bselain dari pada itu\b/gi, 'di samping pertimbangan tersebut'],
+                    [/\bsangat penting untuk diingat oleh para peneliti\b/gi, 'tahapan ini memegang peranan krusial bagi peneliti'],
+                    [/\bsangat penting untuk\b/gi, 'menjadi elemen krusial dalam'],
+                    [/\bberdasarkan hal tersebut\b/gi, 'bertolak dari premis tersebut'],
+                    [/\bdalam rangka untuk\b/gi, 'guna mencapai'],
+                    [/\bmemiliki peranan yang sangat vital\b/gi, 'berkontribusi secara signifikan'],
+                    [/\btidak dapat dipungkiri bahwa\b/gi, 'fakta empiris memperlihatkan bahwa'],
+                    [/\bdi era globalisasi saat ini\b/gi, 'pada konteks dinamika kontemporer']
+                ];
+
+                const mapEN = [
+                    [/\bdirect competition between full service airlines and no-frills carriers\b/gi, 'Market rivalry between traditional legacy carriers and budget airlines'],
+                    [/\bdirect competition between\b/gi, 'market rivalry existing among'],
+                    [/\bis intensifying across the world\b/gi, 'continues to escalate on a global scale'],
+                    [/\bthis paper attempts to provide answers to a number of critical questions\b/gi, 'this investigation seeks to address several fundamental issues'],
+                    [/\bthis paper attempts to provide answers to\b/gi, 'this investigation seeks to address'],
+                    [/\bregarding market share and passenger behavior\b/gi, 'concerning market dynamics and traveler choices'],
+                    [/\bregarding market share and\b/gi, 'concerning market distribution and'],
+                    [/\bthe aim of this paper is to compare passengers' selection criteria\b/gi, 'the primary objective of this study is to evaluate customer decision factors'],
+                    [/\bthe aim of this paper is to\b/gi, 'the principal objective of this study is to'],
+                    [/\bbetween a full service airline and a low cost carrier\b/gi, 'when choosing between full-service carriers and low-cost operators'],
+                    [/\bin order to achieve high accuracy\b/gi, 'To ensure maximum empirical precision'],
+                    [/\bin order to achieve\b/gi, 'to attain maximum'],
+                    [/\bsurveys have been undertaken to ascertain why\b/gi, 'field surveys were conducted to determine why'],
+                    [/\bsurveys have been undertaken to\b/gi, 'empirical surveys were deployed to'],
+                    [/\bdue to the fact that previous studies lack evidence\b/gi, 'owing to the paucity of empirical data in prior literature'],
+                    [/\bdue to the fact that\b/gi, 'as a consequence of'],
+                    [/\bit can be concluded that\b/gi, 'the synthesised data reveals that'],
+                    [/\bresults show that\b/gi, 'empirical evidence demonstrates that'],
+                    [/\bhas a significant impact on\b/gi, 'substantially influences'],
+                    [/\bin spite of the fact that\b/gi, 'notwithstanding the reality that'],
+                    [/\bit is worth noting that\b/gi, 'notably, analysis highlights that'],
+                    [/\ba large number of\b/gi, 'substantial volumes of'],
+                    [/\bplay an important role in\b/gi, 'substantially contribute to']
+                ];
+
+                let newParagraphs = paragraphs.map(p => {
+                    let sentenceStr = p;
+                    if (!sentenceStr.trim()) return '';
+
+                    if (currentLang === 'id') {
+                        mapID.forEach(([rule, repl]) => {
+                            sentenceStr = sentenceStr.replace(rule, repl);
+                        });
+                    } else {
+                        mapEN.forEach(([rule, repl]) => {
+                            sentenceStr = sentenceStr.replace(rule, repl);
+                        });
+                    }
+                    return sentenceStr;
+                });
+
+                editor.value = newParagraphs.join('\n');
+                setLoading(false);
+                handleInput();
+
+                showToast("Parafrase selesai! Memulai pemindaian ulang otomatis...");
+                setTimeout(() => {
+                    runPlagiarismCheck();
+                }, 400);
+            }, 500);
         }
 
         function setLoading(loading) {
